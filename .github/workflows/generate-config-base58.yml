@@ -1,0 +1,47 @@
+name: Generate Config Base58
+
+on:
+  schedule:
+    - cron: "37 4 * * *" # daily at 4:37 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: Generate config_base58.json
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate config_base58.json
+        run: node scripts/generate-config-base58.js
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet config_base58.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to config_base58.json"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected, will commit"
+          fi
+
+      - name: Commit and push changes
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config_base58.json
+          git commit -m "chore: update config_base58.json"
+          git push

@@ -36,6 +36,32 @@ jobs:
           echo "[Error] Due to a change in the workflow file of the upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork."
           exit 1
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate config_base58.json
+        run: node scripts/generate-config-base58.js
+
+      - name: Check config_base58.json changes
+        id: check_base58
+        run: |
+          if git diff --quiet config_base58.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit config_base58.json
+        if: steps.check_base58.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config_base58.json
+          git commit -m "chore: update config_base58.json after upstream sync"
+          git push
+
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@main
         with:
