@@ -62,11 +62,9 @@ try {
 // Base58-encode the entire config.json content as one string
 const encoded = base58Encode(rawConfig);
 
-// Wrap in JSON and output
-const output = { data: encoded };
-
+// Output raw base58 string
 try {
-  fs.writeFileSync(outputPath, JSON.stringify(output), 'utf8');
+  fs.writeFileSync(outputPath, encoded, 'utf8');
   console.log('已生成 config_base58.json');
 } catch (err) {
   console.error('写入 config_base58.json 失败:', err);
