@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable */
-// AUTO-GENERATED SCRIPT: Converts config.json to base58-encoded config_base58.json.
+// Converts config.json → base58-encoded JSON subscription file.
+// Encodes the entire config.json as a single base58 string, then wraps in JSON.
 // Usage: node scripts/generate-config-base58.js
 
 const fs = require('fs');
@@ -38,23 +39,6 @@ function base58Encode(str) {
   return encoded;
 }
 
-function encodeValues(obj) {
-  if (typeof obj === 'string') {
-    return base58Encode(obj);
-  }
-  if (Array.isArray(obj)) {
-    return obj.map(encodeValues);
-  }
-  if (obj !== null && typeof obj === 'object') {
-    const result = {};
-    for (const [key, value] of Object.entries(obj)) {
-      result[key] = encodeValues(value);
-    }
-    return result;
-  }
-  return obj;
-}
-
 const projectRoot = path.resolve(__dirname, '..');
 const configPath = path.join(projectRoot, 'config.json');
 const outputPath = path.join(projectRoot, 'config_base58.json');
@@ -67,18 +51,22 @@ try {
   process.exit(1);
 }
 
-let config;
+// Validate JSON
 try {
-  config = JSON.parse(rawConfig);
+  JSON.parse(rawConfig);
 } catch (err) {
   console.error('config.json 不是有效的 JSON:', err);
   process.exit(1);
 }
 
-const encoded = encodeValues(config);
+// Base58-encode the entire config.json content as one string
+const encoded = base58Encode(rawConfig);
+
+// Wrap in JSON and output
+const output = { data: encoded };
 
 try {
-  fs.writeFileSync(outputPath, JSON.stringify(encoded, null, 2), 'utf8');
+  fs.writeFileSync(outputPath, JSON.stringify(output), 'utf8');
   console.log('已生成 config_base58.json');
 } catch (err) {
   console.error('写入 config_base58.json 失败:', err);
