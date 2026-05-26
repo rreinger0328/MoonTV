@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable */
-// Converts config.json → base58-encoded JSON subscription file.
-// Encodes the entire config.json as a single base58 string, then wraps in JSON.
+// Converts config.json to a pure base58 string (no JSON wrapper).
+// The server uses bs58.decode() directly on the response text.
 // Usage: node scripts/generate-config-base58.js
 
 const fs = require('fs');
